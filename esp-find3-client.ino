@@ -60,7 +60,7 @@ void SubmitWiFi(void)
   } else {
     Serial.print(n);
     Serial.println(" networks found:");
-    for (int i = 0; i < n-1; ++i) {
+    for (int i = 0; i < n; ++i) {
 
 
       request += "{\"rssi\": ";
@@ -69,7 +69,7 @@ void SubmitWiFi(void)
       request += WiFi.BSSIDstr(i);
       request += "\"}";
 
-      if( (i<n-2) )
+      if( (i<n-1) )
       {
         request += ",";
       }
