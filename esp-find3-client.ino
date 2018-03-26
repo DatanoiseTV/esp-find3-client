@@ -1,4 +1,3 @@
-
 #include <WiFiClientSecure.h>
 #include <WiFi.h>
 #include <WiFiMulti.h>
@@ -12,7 +11,9 @@ const char* password = "WIFI_SSID";
 
 // Uncomment to set to learn mode
 #define MODE_TRACKING 1
-#define LOCATION "random loc"
+#define LOCATION "living room"
+
+#define GROUP_NAME "mygroup"
 
 const char* host = "cloud.internalpositioning.com";
 const char* ntpServer = "pool.ntp.org";
@@ -64,7 +65,7 @@ void SubmitWiFi(void)
 
   JsonObject& root = jsonBuffer.createObject();
   root["username"] = chipIdStr;
-  root["group"] = "jooox";
+  root["group"] = GROUP_NAME;
   JsonArray& data = root.createNestedArray("wifi-fingerprint");
 
   int n = WiFi.scanNetworks();
