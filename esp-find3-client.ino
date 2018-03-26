@@ -146,7 +146,7 @@ void SubmitWiFi(void)
   JsonObject& data = root.createNestedObject("s");
 
   Serial.println("[ INFO ]\tWiFi scan starting..");
-  int n = WiFi.scanNetworks();
+  int n = WiFi.scanNetworks(false, true);
   Serial.println("[ INFO ]\tWiFi Scan finished.");
   if (n == 0) {
     Serial.println("[ ERROR ]\tNo networks found");
