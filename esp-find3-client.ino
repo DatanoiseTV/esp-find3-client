@@ -33,6 +33,18 @@ const char* password = "WIFI_PASS";
 
 #define GROUP_NAME "jooox"
 
+// Important! BLE + WiFi Support does not fit in standard partition table.
+// Manual experimental changes are needed.
+// See https://desire.giesecke.tk/index.php/2018/01/30/change-partition-size/
+//#define USE_BLE 1
+#define BLE_SCANTIME 30
+
+#ifdef USE_BLE
+#include <BLEDevice.h>
+#include <BLEUtils.h>
+#include <BLEScan.h>
+#endif
+
 const char* host = "cloud.internalpositioning.com";
 const char* ntpServer = "pool.ntp.org";
 
@@ -44,7 +56,11 @@ void setup() {
   Serial.begin(115200);
   delay(10);
 
-  Serial.println("Find3 ESP client by DatanoiseTV");
+  #ifdef USE_BLE
+  Serial.println("Find3 ESP client by DatanoiseTV (WiFi + BLE support.)");
+  #else
+  Serial.println("Find3 ESP client by DatanoiseTV (WiFi support WITHOUT BLE.)");
+  #endif
   
   chipIdStr = String((uint32_t)(ESP.getEfuseMac()>>16));
   Serial.print("[ INFO ]\tChipID is: ");
@@ -89,6 +105,7 @@ void SubmitWiFi(void)
   root["f"] = GROUP_NAME;
   JsonObject& data = root.createNestedObject("s");
 
+  Serial.println("[ INFO ]\t WiFi scan starting..");
   int n = WiFi.scanNetworks();
   Serial.println("[ INFO ]\tWiFi Scan finished.");
   if (n == 0) {
@@ -96,11 +113,30 @@ void SubmitWiFi(void)
   } else {
     Serial.print("[ INFO ]\t");
     Serial.print(n);
-    Serial.println(" networks found.");
-    JsonObject& network = data.createNestedObject("wifi");
+    Serial.println(" WiFi networks found.");
+    JsonObject& wifi_network = data.createNestedObject("wifi");
     for (int i = 0; i < n; ++i) {
-      network[WiFi.BSSIDstr(i)] = WiFi.RSSI(i);
+      wifi_network[WiFi.BSSIDstr(i)] = WiFi.RSSI(i);
     }
+
+    #ifdef USE_BLE
+    Serial.println("[ INFO ]\t BLE scan starting..");
+    BLEDevice::init("");
+    BLEScan* pBLEScan = BLEDevice::getScan(); //create new scan
+    pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
+    BLEScanResults foundDevices = pBLEScan->start(BLE_SCANTIME);
+
+    Serial.print("[ INFO ]\t");
+    Serial.print(foundDevices.getCount());
+    Serial.println(" BLE devices found.");
+
+    JsonObject& bt_network = data.createNestedObject("bluetooth");
+    for(int i=0; i<foundDevices.getCount(); i++)
+    {
+      std::string mac = foundDevices.getDevice(i).getAddress().toString();
+      bt_network[(String)mac.c_str()] = (int)foundDevices.getDevice(i).getRSSI();
+    }
+    #endif
 
     uint64_t currentTime = getTime();
     #ifndef MODE_TRACKING
@@ -109,6 +145,10 @@ void SubmitWiFi(void)
     root["t"] = getTime();
     
     root.printTo(request);
+
+    #ifdef DEBUG
+    Serial.println(request);
+    #endif
     
     WiFiClientSecure client;
     const int httpsPort = 443;
@@ -140,7 +180,6 @@ void SubmitWiFi(void)
       }
     }
 
-
     // Check HTTP status
     char status[60] = {0};
     client.readBytesUntil('\r', status, sizeof(status));
@@ -165,6 +204,7 @@ void SubmitWiFi(void)
    }
 
    Serial.println("[ INFO ]\tClosing connection.");
+   Serial.println("=============================================================");
   }
 }
 
