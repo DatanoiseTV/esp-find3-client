@@ -28,16 +28,16 @@ const char* ssid     = "WIFI_SSID";
 const char* password = "WIFI_PASS";
 
 // Uncomment to set to learn mode
-//#define MODE_TRACKING 1
+#define MODE_TRACKING 1
 #define LOCATION "living room"
 
-#define GROUP_NAME "jooox"
+#define GROUP_NAME "testgroup"
 
 // Important! BLE + WiFi Support does not fit in standard partition table.
 // Manual experimental changes are needed.
 // See https://desire.giesecke.tk/index.php/2018/01/30/change-partition-size/
-//#define USE_BLE 1
-#define BLE_SCANTIME 30
+#define USE_BLE 1
+#define BLE_SCANTIME 5
 
 #ifdef USE_BLE
 #include <BLEDevice.h>
@@ -138,7 +138,7 @@ void SubmitWiFi(void)
     }
     #endif
 
-    #ifndef MODE_TRACKING
+    #ifdef MODE_TRACKING
       root["l"] = LOCATION;
     #endif
     root["t"] = getTime();
@@ -148,7 +148,7 @@ void SubmitWiFi(void)
     #ifdef DEBUG
     Serial.println(request);
     #endif
-    
+        
     WiFiClientSecure client;
     const int httpsPort = 443;
     if (!client.connect(host, httpsPort)) {
