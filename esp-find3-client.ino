@@ -28,7 +28,7 @@ const char* ssid     = "WIFI_SSID";
 const char* password = "WIFI_PASS";
 
 // Uncomment to set to learn mode
-#define MODE_TRACKING 1
+//#define MODE_TRACKING 1
 #define LOCATION "living room"
 
 #define GROUP_NAME "jooox"
@@ -52,9 +52,8 @@ void setup() {
 
   wifiMulti.addAP(ssid, password);
 
-  Serial.println("[ INFO ]\tConnecting to WiFi...");
+  Serial.println("[ INFO ]\tConnecting to WiFi..");
   if (wifiMulti.run() == WL_CONNECTED) {
-    Serial.println("");
     Serial.println("[ INFO ]\tWiFi connection established.");
     Serial.print("[ INFO ]\tIP address: ");
     Serial.println(WiFi.localIP());
@@ -176,8 +175,7 @@ void SubmitWiFi(void)
     Serial.println("[ INFO ]\tLooks like a valid response.");
    }
 
-    Serial.println();
-    Serial.println("[ INFO ]\tClosing connection.");
+   Serial.println("[ INFO ]\tClosing connection.");
   }
 }
 
