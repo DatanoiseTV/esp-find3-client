@@ -138,7 +138,6 @@ void SubmitWiFi(void)
     }
     #endif
 
-    uint64_t currentTime = getTime();
     #ifndef MODE_TRACKING
       root["l"] = LOCATION;
     #endif
