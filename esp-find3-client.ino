@@ -149,7 +149,7 @@ void SubmitWiFi(void)
 
    char endOfHeaders[] = "\r\n\r\n";
    if (!client.find(endOfHeaders)) {
-    Serial.println(F("[ ERROR ]\t Invalid Response"));
+    Serial.println(F("[ ERROR ]\tInvalid Response"));
     return;
    }
    else
