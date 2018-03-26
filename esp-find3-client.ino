@@ -81,8 +81,8 @@ unsigned long long getTime() {
   time_t now;
   struct tm timeinfo;
   if (!getLocalTime(&timeinfo)) {
-    Serial.println("[ ERROR ]\tFailed to obtain time via NTP.");
-    return(0);
+    Serial.println("[ ERROR ]\tFailed to obtain time via NTP. Retrying.");
+    getTime();
   }
   else
   {
@@ -105,7 +105,7 @@ void SubmitWiFi(void)
   root["f"] = GROUP_NAME;
   JsonObject& data = root.createNestedObject("s");
 
-  Serial.println("[ INFO ]\t WiFi scan starting..");
+  Serial.println("[ INFO ]\tWiFi scan starting..");
   int n = WiFi.scanNetworks();
   Serial.println("[ INFO ]\tWiFi Scan finished.");
   if (n == 0) {
@@ -120,7 +120,7 @@ void SubmitWiFi(void)
     }
 
     #ifdef USE_BLE
-    Serial.println("[ INFO ]\t BLE scan starting..");
+    Serial.println("[ INFO ]\tBLE scan starting..");
     BLEDevice::init("");
     BLEScan* pBLEScan = BLEDevice::getScan(); //create new scan
     pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
