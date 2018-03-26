@@ -31,7 +31,7 @@ const char* password = "WIFI_PASS";
 #define MODE_TRACKING 1
 #define LOCATION "living room"
 
-#define GROUP_NAME "testgroup"
+#define GROUP_NAME "mygroup2"
 
 // Important! BLE + WiFi Support does not fit in standard partition table.
 // Manual experimental changes are needed.
@@ -45,6 +45,11 @@ const char* password = "WIFI_PASS";
 #include <BLEScan.h>
 #endif
 
+#define uS_TO_S_FACTOR 1000000  /* Conversion factor for micro seconds to seconds */
+
+// 20 currently results in an interval of 45s
+#define TIME_TO_SLEEP  20        /* Time ESP32 will go to sleep (in seconds) */
+
 const char* host = "cloud.internalpositioning.com";
 const char* ntpServer = "pool.ntp.org";
 
@@ -52,15 +57,37 @@ const char* ntpServer = "pool.ntp.org";
 
 String chipIdStr;
 
+/*
+Method to print the reason by which ESP32
+has been awaken from sleep
+*/
+void print_wakeup_reason(){
+  esp_sleep_wakeup_cause_t wakeup_reason;
+
+  wakeup_reason = esp_sleep_get_wakeup_cause();
+
+  switch(wakeup_reason)
+  {
+    case 1  : Serial.println("[ INFO ]\tWakeup caused by external signal using RTC_IO"); break;
+    case 2  : Serial.println("[ INFO ]\tWakeup caused by external signal using RTC_CNTL"); break;
+    case 3  : Serial.println("[ INFO ]\tWakeup caused by timer"); break;
+    case 4  : Serial.println("[ INFO ]\tWakeup caused by touchpad"); break;
+    case 5  : Serial.println("[ INFO ]\tWakeup caused by ULP program"); break;
+    default : Serial.println("[ INFO ]\tWakeup was not caused by deep sleep"); break;
+  }
+}
+
 void setup() {
   Serial.begin(115200);
-  delay(10);
+  delay(1000);
 
   #ifdef USE_BLE
   Serial.println("Find3 ESP client by DatanoiseTV (WiFi + BLE support.)");
   #else
   Serial.println("Find3 ESP client by DatanoiseTV (WiFi support WITHOUT BLE.)");
   #endif
+
+  print_wakeup_reason();
   
   chipIdStr = String((uint32_t)(ESP.getEfuseMac()>>16));
   Serial.print("[ INFO ]\tChipID is: ");
@@ -92,6 +119,7 @@ unsigned long long getTime() {
   unsigned long long uTime = (uintmax_t)now;
   return uTime * 1000UL;
 }
+
 
 void SubmitWiFi(void)
 {
@@ -204,6 +232,8 @@ void SubmitWiFi(void)
 
    Serial.println("[ INFO ]\tClosing connection.");
    Serial.println("=============================================================");
+   esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
+   esp_deep_sleep_start();
   }
 }
 
