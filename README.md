@@ -10,7 +10,7 @@ Original repository at https://github.com/DatanoiseTV/esp-find3-client
 * Fetch code and edit esp-find3-client.ino
 * Change WiFi SSID and Password to reflect your WiFi Setup. You can add multiple APs.
 * Change GROUP_NAME to your group name
-* If you wish to enable BLE scanning, set USE_BLE to 1.
+* If you wish to enable BLE scanning, set ```USE_BLE``` to 1.
 * Upload code to ESP8266/ESP32 and watch the Arduino Serial Terminal for debug info.
 
 ### Learning new locations
@@ -20,10 +20,10 @@ The easiest way to learn new locations is using the Find3 app. Follow the offici
 
 #### Multiple ESP beacons
 * Prepare each ESP beacon by changing the ```#define LOCATION "<YOUR_LOCATION>"``` to the location used for learning the individual beacon.
-* Set ```#define MODE_TRACKING 1``` on the top of the code
+* Set ```#define MODE_LEARNING 1``` on the top of the code
 * Put the corresponding beacons in the places / rooms you want to learn
 * Power up beacons using USB power supplies or batteries and let it run for 5-10 minutes
-* Disconnect all beacons and change ```#define MODE_TRACKING 0``` on the top of the code to go back to tracking mode.
+* Disconnect all beacons and change ```#define MODE_LEARNING 0``` on the top of the code to go back to tracking mode.
 
 ## What does it do?
 
