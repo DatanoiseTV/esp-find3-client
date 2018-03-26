@@ -48,3 +48,7 @@ It performs the following steps:
 * Scan for WiFi APs (**and now also BLE on ESP32**)
 * Prepare JSON to submit to server
 * Submit JSON with WiFi BSSIDs and BLE adresses and their corresponding RSSI to Server
+
+## Contact
+
+You can contact me at find32dev (at) ext.no-route.org.
