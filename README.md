@@ -18,6 +18,6 @@ Any forks are welcome.
 ## How does the ESP part work in detail?
 * Connect to WiFi
 * Synchronize time using NTP (needed for timestamps)
-* Scan for WiFi APs
+* Scan for WiFi APs (**and now also BLE on ESP32**)
 * Prepare JSON to submit to server
-* Submit JSON with BSSIDs and their corresponding RSSI to Server
+* Submit JSON with WiFi BSSIDs and BLE adresses and their corresponding RSSI to Server
