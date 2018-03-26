@@ -124,7 +124,7 @@ void SubmitWiFi(void)
 
     // We now create a URI for the request
     #ifndef MODE_TRACKING
-    String url = "/train";
+    String url = "/learn";
     #else
     String url = "/track";
     #endif
