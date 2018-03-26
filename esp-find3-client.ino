@@ -31,7 +31,7 @@ const char* password = "WIFI_PASS";
 //#define MODE_LEARNING 1
 #define LOCATION "living room"
 
-#define GROUP_NAME "mygroup2"
+#define GROUP_NAME "somegroup"
 
 // Important! BLE + WiFi Support does not fit in standard partition table.
 // Manual experimental changes are needed.
