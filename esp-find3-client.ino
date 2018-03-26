@@ -45,6 +45,11 @@ const char* password = "WIFI_PASS";
 #include <BLEScan.h>
 #endif
 
+// Automagically disable BLE on ESP8266
+#if defined(ESP8266)
+#undef USE_BLE
+#endif
+
 // Enable Deepsleep for power saving. This will make it run less often.
 // #define USE_DEEPSLEEP 1
 
@@ -111,12 +116,12 @@ void setup() {
   }
 }
 
-unsigned long long getTime() {
+unsigned long long getUnixTime() {
   time_t now;
   struct tm timeinfo;
   if (!getLocalTime(&timeinfo)) {
     Serial.println("[ ERROR ]\tFailed to obtain time via NTP. Retrying.");
-    getTime();
+    getUnixTime();
   }
   else
   {
@@ -176,7 +181,7 @@ void SubmitWiFi(void)
     #ifdef MODE_LEARNING
       root["l"] = LOCATION;
     #endif
-    root["t"] = getTime();
+    root["t"] = getUnixTime();
     
     root.printTo(request);
 
