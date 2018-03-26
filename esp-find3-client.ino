@@ -85,9 +85,9 @@ void SubmitWiFi(void)
   DynamicJsonBuffer jsonBuffer;
 
   JsonObject& root = jsonBuffer.createObject();
-  root["username"] = chipIdStr;
-  root["group"] = GROUP_NAME;
-  JsonArray& data = root.createNestedArray("wifi-fingerprint");
+  root["d"] = chipIdStr;
+  root["f"] = GROUP_NAME;
+  JsonObject& data = root.createNestedObject("s");
 
   int n = WiFi.scanNetworks();
   Serial.println("[ INFO ]\tWiFi Scan finished.");
@@ -97,26 +97,19 @@ void SubmitWiFi(void)
     Serial.print("[ INFO ]\t");
     Serial.print(n);
     Serial.println(" networks found.");
+    JsonObject& network = data.createNestedObject("wifi");
     for (int i = 0; i < n; ++i) {
-
-       JsonObject& wifidata = data.createNestedObject();
-       wifidata["rssi"] = WiFi.RSSI(i);
-       wifidata["mac"] = WiFi.BSSIDstr(i);
+      network[WiFi.BSSIDstr(i)] = WiFi.RSSI(i);
     }
 
     uint64_t currentTime = getTime();
     #ifndef MODE_TRACKING
-      root["location"] = LOCATION;
+      root["l"] = LOCATION;
     #endif
-    root["timestamp"] = getTime();
-    root["password"] = "icanhaznopasswd";
+    root["t"] = getTime();
     
     root.printTo(request);
     
-    #ifdef DEBUG
-    Serial.println(request);
-    #endif
-
     WiFiClientSecure client;
     const int httpsPort = 443;
     if (!client.connect(host, httpsPort)) {
@@ -124,11 +117,7 @@ void SubmitWiFi(void)
     }
 
     // We now create a URI for the request
-    #ifndef MODE_TRACKING
-    String url = "/learn";
-    #else
-    String url = "/track";
-    #endif
+    String url = "/data";
 
     Serial.print("[ INFO ]\tRequesting URL: ");
     Serial.println(url);
