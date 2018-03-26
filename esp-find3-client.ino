@@ -34,7 +34,7 @@ void setup() {
     Serial.println("");
     Serial.println("[ INFO ]\tWiFi connection established.");
     Serial.print("[ INFO ]\tIP address: ");
-    Serial.print(WiFi.localIP());
+    Serial.println(WiFi.localIP());
     configTime(0, 0, ntpServer);
   }
 }
