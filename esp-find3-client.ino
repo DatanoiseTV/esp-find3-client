@@ -1,3 +1,20 @@
+/*
+  This file is part of esp-find3-client by Sylwester aka DatanoiseTV.
+  The original source can be found at https://github.com/DatanoiseTV/esp-find3-client.
+
+  esp-find3-client is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+  
+  esp-find3-client is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with esp-find3-client.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include <WiFiClientSecure.h>
 #include <WiFi.h>
@@ -149,7 +166,7 @@ void SubmitWiFi(void)
 
    char endOfHeaders[] = "\r\n\r\n";
    if (!client.find(endOfHeaders)) {
-    Serial.println(F("[ ERROR ]\tInvalid Response"));
+    Serial.println(F("[ ERROR ]\t Invalid Response"));
     return;
    }
    else
@@ -158,7 +175,7 @@ void SubmitWiFi(void)
    }
 
     Serial.println();
-    Serial.println("[ INFO ]\t Closing connection.");
+    Serial.println("[ INFO ]\tClosing connection.");
   }
 }
 
