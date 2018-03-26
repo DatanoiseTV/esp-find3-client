@@ -10,11 +10,12 @@ WiFiMulti wifiMulti;
 const char* ssid     = "WIFI_PASS";
 const char* password = "WIFI_SSID";
 
-const char* host = "cloud.internalpositioning.com";
-//const char* host = "192.168.42.45";
-const char* ntpServer = "pool.ntp.org";
+// Uncomment to set to learn mode
+#define MODE_TRACKING 1
+#define LOCATION "random loc"
 
-uint64_t chipid;  
+const char* host = "cloud.internalpositioning.com";
+const char* ntpServer = "pool.ntp.org";
 
 //#define DEBUG 1
 
@@ -57,7 +58,7 @@ void SubmitWiFi(void)
 
   DynamicJsonBuffer jsonBuffer;
 
-  chipid = ESP.getEfuseMac();//The chip ID is essentially its MAC address(length: 6 bytes).
+  chipid = ESP.getEfuseMac(); //The chip ID is essentially its MAC address(length: 6 bytes).
 
   String chipIdStr = String((uint32_t)(chipid>>16));
 
@@ -81,7 +82,9 @@ void SubmitWiFi(void)
     }
 
     uint64_t currentTime = getTime();
-    root["location"] = "random loc";
+    #ifndef MODE_TRACKING
+      root["location"] = LOCATION;
+    #endif
     root["timestamp"] = getTime();
     root["password"] = "icanhaznopasswd";
     
@@ -98,7 +101,11 @@ void SubmitWiFi(void)
     }
 
     // We now create a URI for the request
+    #ifndef MODE_TRACKING
+    String url = "/train";
+    #else
     String url = "/track";
+    #endif
 
     Serial.print("Requesting URL: ");
     Serial.println(url);
@@ -129,7 +136,6 @@ void SubmitWiFi(void)
 
     Serial.println();
     Serial.println("closing connection");
-
   }
 }
 
