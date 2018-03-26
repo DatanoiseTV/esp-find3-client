@@ -1,12 +1,17 @@
+
 #include <WiFiClientSecure.h>
 #include <WiFi.h>
 #include <WiFiMulti.h>
 WiFiMulti wifiMulti;
 
-const char* ssid     = "WIFI_SSID";
-const char* password = "WIFI_PASS";
+#define ARDUINOJSON_USE_LONG_LONG 1
+#include <ArduinoJson.h>
+
+const char* ssid     = "WIFI_PASS";
+const char* password = "WIFI_SSID";
 
 const char* host = "cloud.internalpositioning.com";
+//const char* host = "192.168.42.45";
 const char* ntpServer = "pool.ntp.org";
 
 uint64_t chipid;  
@@ -17,11 +22,13 @@ void setup() {
   Serial.begin(115200);
   delay(10);
 
+  Serial.println("Find3 ESP client by DatanoiseTV");
+
   // We start by connecting to a WiFi network
 
   wifiMulti.addAP(ssid, password);
 
-  Serial.println("Connecting Wifi...");
+  Serial.println("Connecting to WiFi...");
   if (wifiMulti.run() == WL_CONNECTED) {
     Serial.println("");
     Serial.println("WiFi connected");
@@ -29,29 +36,35 @@ void setup() {
     Serial.println(WiFi.localIP());
     configTime(0, 0, ntpServer);
   }
-
 }
 
-unsigned long getTime() {
-time_t now;
-struct tm timeinfo;
-if (!getLocalTime(&timeinfo)) {
-Serial.println("Failed to obtain time");
-return(0);
-}
-time(&now);
-return now;
+unsigned long long getTime() {
+  time_t now;
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo)) {
+    Serial.println("Failed to obtain time");
+    return(0);
+  }
+  time(&now);
+  unsigned long long uTime = (uintmax_t)now;
+  return uTime * 1000UL;
 }
 
 void SubmitWiFi(void)
 {
   String request;
   uint64_t chipid;  
+
+  DynamicJsonBuffer jsonBuffer;
+
   chipid = ESP.getEfuseMac();//The chip ID is essentially its MAC address(length: 6 bytes).
 
   String chipIdStr = String((uint32_t)(chipid>>16));
 
-  request += "{\"username\": \"" + chipIdStr + "\", \"group\": \"jooo\", \"wifi-fingerprint\": [";
+  JsonObject& root = jsonBuffer.createObject();
+  root["username"] = chipIdStr;
+  root["group"] = "jooox";
+  JsonArray& data = root.createNestedArray("wifi-fingerprint");
 
   int n = WiFi.scanNetworks();
   Serial.println("scan done");
@@ -62,26 +75,21 @@ void SubmitWiFi(void)
     Serial.println(" networks found:");
     for (int i = 0; i < n; ++i) {
 
-
-      request += "{\"rssi\": ";
-      request += WiFi.RSSI(i);
-      request += ", \"mac\": \"";
-      request += WiFi.BSSIDstr(i);
-      request += "\"}";
-
-      if( (i<n-1) )
-      {
-        request += ",";
-      }
-
-      #ifdef DEBUG
-      Serial.println("+ @" + String(getTime()) + "000: #" + String(i) + ": " + WiFi.BSSIDstr(i) + " (" +  WiFi.RSSI(i) + ")" );
-      #endif
+       JsonObject& wifidata = data.createNestedObject();
+       wifidata["rssi"] = WiFi.RSSI(i);
+       wifidata["mac"] = WiFi.BSSIDstr(i);
     }
 
-    String localTimeStr = String(getTime());
-
-    request += "], \"location\": \"living room\", \"timestamp\": " + localTimeStr + "000, \"password\": \"frusciante_0128\"}";
+    uint64_t currentTime = getTime();
+    root["location"] = "random loc";
+    root["timestamp"] = getTime();
+    root["password"] = "icanhaznopasswd";
+    
+    root.printTo(request);
+    
+    #ifdef DEBUG
+    Serial.println(request);
+    #endif
 
     WiFiClientSecure client;
     const int httpsPort = 443;
@@ -102,7 +110,7 @@ void SubmitWiFi(void)
                  "Content-Length: " + request.length() + "\r\n\r\n" +
                  request +
                  "\r\n\n\r\n"
-    );
+                );
 
     unsigned long timeout = millis();
     while (client.available() == 0) {
@@ -116,7 +124,7 @@ void SubmitWiFi(void)
     // Read all the lines of the reply from server and print them to Serial
     while (client.available()) {
       String line = client.readStringUntil('\r');
-      //Serial.print(line);
+      Serial.print(line);
     }
 
     Serial.println();
@@ -128,5 +136,4 @@ void SubmitWiFi(void)
 void loop() {
   // Use WiFiClient class to create TCP connections
   SubmitWiFi();
-
 }
