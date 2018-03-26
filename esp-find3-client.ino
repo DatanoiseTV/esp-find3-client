@@ -117,7 +117,7 @@ void SubmitWiFi(void)
                  "Content-Type: application/json\r\n" +
                  "Content-Length: " + request.length() + "\r\n\r\n" +
                  request +
-                 "\r\n\n\r\n"
+                 "\r\n\r\n"
                 );
 
     unsigned long timeout = millis();
