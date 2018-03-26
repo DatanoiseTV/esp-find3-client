@@ -3,6 +3,16 @@ Indoor Location using ESP8266/ESP32 and Find3 (https://github.com/schollz/find3)
 
 Original repository at https://github.com/DatanoiseTV/esp-find3-client
 
+## Quick start
+* Download Arduino IDE
+* Download ESP32 support for Arduino IDE
+* Download and install ArduinoJSON library
+* Fetch code and edit esp-find3-client.ino
+* Change WiFi SSID and Password to reflect your WiFi Setup. You can add multiple APs.
+* Change GROUP_NAME to your group name
+* If you wish to enable BLE scanning, set USE_BLE to 1.
+* Upload code to ESP8266/ESP32 and watch the Arduino Serial Terminal for debug info.
+
 ## What does it do?
 
 This code runs on an ESP8266 / ESP32 microcontroller, which has WiFi (and BLE on ESP32) on-board and is widely available from about 2€.
