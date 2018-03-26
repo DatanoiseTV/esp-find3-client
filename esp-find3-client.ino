@@ -1,3 +1,4 @@
+
 #include <WiFiClientSecure.h>
 #include <WiFi.h>
 #include <WiFiMulti.h>
@@ -6,14 +7,14 @@ WiFiMulti wifiMulti;
 #define ARDUINOJSON_USE_LONG_LONG 1
 #include <ArduinoJson.h>
 
-const char* ssid     = "WIFI_PASS";
-const char* password = "WIFI_SSID";
+const char* ssid     = "WIFI_SSID";
+const char* password = "WIFI_PASS";
 
 // Uncomment to set to learn mode
 #define MODE_TRACKING 1
 #define LOCATION "living room"
 
-#define GROUP_NAME "mygroup"
+#define GROUP_NAME "jooox"
 
 const char* host = "cloud.internalpositioning.com";
 const char* ntpServer = "pool.ntp.org";
@@ -26,16 +27,14 @@ void setup() {
 
   Serial.println("Find3 ESP client by DatanoiseTV");
 
-  // We start by connecting to a WiFi network
+   wifiMulti.addAP(ssid, password);
 
-  wifiMulti.addAP(ssid, password);
-
-  Serial.println("Connecting to WiFi...");
+  Serial.println("[ INFO ]\tConnecting to WiFi...");
   if (wifiMulti.run() == WL_CONNECTED) {
     Serial.println("");
-    Serial.println("WiFi connected");
-    Serial.println("IP address: ");
-    Serial.println(WiFi.localIP());
+    Serial.println("[ INFO ]\tWiFi connection established.");
+    Serial.print("[ INFO ]\tIP address: ");
+    Serial.print(WiFi.localIP());
     configTime(0, 0, ntpServer);
   }
 }
@@ -44,8 +43,12 @@ unsigned long long getTime() {
   time_t now;
   struct tm timeinfo;
   if (!getLocalTime(&timeinfo)) {
-    Serial.println("Failed to obtain time");
+    Serial.println("[ ERROR ]\tFailed to obtain time via NTP.");
     return(0);
+  }
+  else
+  {
+    Serial.println("[ INFO ]\tSuccessfully obtained time via NTP.");
   }
   time(&now);
   unsigned long long uTime = (uintmax_t)now;
@@ -69,12 +72,13 @@ void SubmitWiFi(void)
   JsonArray& data = root.createNestedArray("wifi-fingerprint");
 
   int n = WiFi.scanNetworks();
-  Serial.println("scan done");
+  Serial.println("[ INFO ]\tWiFi Scan finished.");
   if (n == 0) {
-    Serial.println("no networks found");
+    Serial.println("[ ERROR ]\tNo networks found");
   } else {
+    Serial.print("[ INFO ]\t");
     Serial.print(n);
-    Serial.println(" networks found:");
+    Serial.println(" networks found.");
     for (int i = 0; i < n; ++i) {
 
        JsonObject& wifidata = data.createNestedObject();
@@ -108,7 +112,7 @@ void SubmitWiFi(void)
     String url = "/track";
     #endif
 
-    Serial.print("Requesting URL: ");
+    Serial.print("[ INFO ]\tRequesting URL: ");
     Serial.println(url);
 
     // This will send the request to the server
@@ -129,14 +133,32 @@ void SubmitWiFi(void)
       }
     }
 
-    // Read all the lines of the reply from server and print them to Serial
-    while (client.available()) {
-      String line = client.readStringUntil('\r');
-      Serial.print(line);
+
+    // Check HTTP status
+    char status[60] = {0};
+    client.readBytesUntil('\r', status, sizeof(status));
+    if (strcmp(status, "HTTP/1.1 200 OK") != 0) {
+      Serial.print(F("[ ERROR ]\tUnexpected Response: "));
+      Serial.println(status);
+      return;
+    }
+    else
+    {
+      Serial.println(F("[ INFO ]\tGot a 200 OK."));
     }
 
+   char endOfHeaders[] = "\r\n\r\n";
+   if (!client.find(endOfHeaders)) {
+    Serial.println(F("[ ERROR ]\t Invalid Response"));
+    return;
+   }
+   else
+   {
+    Serial.println("[ INFO ]\tLooks like a valid response.");
+   }
+
     Serial.println();
-    Serial.println("closing connection");
+    Serial.println("[ INFO ]\t Closing connection.");
   }
 }
 
