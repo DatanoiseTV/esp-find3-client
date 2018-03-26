@@ -28,7 +28,7 @@ const char* ssid     = "WIFI_SSID";
 const char* password = "WIFI_PASS";
 
 // Uncomment to set to learn mode
-#define MODE_TRACKING 1
+//#define MODE_LEARNING 1
 #define LOCATION "living room"
 
 #define GROUP_NAME "mygroup2"
@@ -36,7 +36,7 @@ const char* password = "WIFI_PASS";
 // Important! BLE + WiFi Support does not fit in standard partition table.
 // Manual experimental changes are needed.
 // See https://desire.giesecke.tk/index.php/2018/01/30/change-partition-size/
-#define USE_BLE 1
+#define USE_BLE 0
 #define BLE_SCANTIME 5
 
 #ifdef USE_BLE
@@ -45,10 +45,15 @@ const char* password = "WIFI_PASS";
 #include <BLEScan.h>
 #endif
 
+// Enable Deepsleep for power saving. This will make it run less often.
+// #define USE_DEEPSLEEP 1
+
 #define uS_TO_S_FACTOR 1000000  /* Conversion factor for micro seconds to seconds */
 
 // 20 currently results in an interval of 45s
 #define TIME_TO_SLEEP  20        /* Time ESP32 will go to sleep (in seconds) */
+
+RTC_DATA_ATTR int bootCount = 0;
 
 const char* host = "cloud.internalpositioning.com";
 const char* ntpServer = "pool.ntp.org";
@@ -65,7 +70,9 @@ void print_wakeup_reason(){
   esp_sleep_wakeup_cause_t wakeup_reason;
 
   wakeup_reason = esp_sleep_get_wakeup_cause();
-
+  ++bootCount;
+  Serial.println("[ INFO ]\tBoot number: " + String(bootCount));
+   
   switch(wakeup_reason)
   {
     case 1  : Serial.println("[ INFO ]\tWakeup caused by external signal using RTC_IO"); break;
@@ -150,8 +157,8 @@ void SubmitWiFi(void)
     #ifdef USE_BLE
     Serial.println("[ INFO ]\tBLE scan starting..");
     BLEDevice::init("");
-    BLEScan* pBLEScan = BLEDevice::getScan(); //create new scan
-    pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
+    BLEScan* pBLEScan = BLEDevice::getScan(); // create new scan
+    pBLEScan->setActiveScan(true); // active scan uses more power, but get results faster
     BLEScanResults foundDevices = pBLEScan->start(BLE_SCANTIME);
 
     Serial.print("[ INFO ]\t");
@@ -164,9 +171,9 @@ void SubmitWiFi(void)
       std::string mac = foundDevices.getDevice(i).getAddress().toString();
       bt_network[(String)mac.c_str()] = (int)foundDevices.getDevice(i).getRSSI();
     }
-    #endif
+    #endif // USE_BLE
 
-    #ifdef MODE_TRACKING
+    #ifdef MODE_LEARNING
       root["l"] = LOCATION;
     #endif
     root["t"] = getTime();
@@ -232,12 +239,14 @@ void SubmitWiFi(void)
 
    Serial.println("[ INFO ]\tClosing connection.");
    Serial.println("=============================================================");
+
+   #ifdef USE_DEEPSLEEP
    esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
    esp_deep_sleep_start();
+   #endif
   }
 }
 
 void loop() {
-  // Use WiFiClient class to create TCP connections
   SubmitWiFi();
 }
