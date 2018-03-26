@@ -38,13 +38,19 @@ const char* ntpServer = "pool.ntp.org";
 
 //#define DEBUG 1
 
+String chipIdStr;
+
 void setup() {
   Serial.begin(115200);
   delay(10);
 
   Serial.println("Find3 ESP client by DatanoiseTV");
+  
+  chipIdStr = String((uint32_t)(ESP.getEfuseMac()>>16));
+  Serial.print("[ INFO ]\tChipID is: ");
+  Serial.println(chipIdStr);
 
-   wifiMulti.addAP(ssid, password);
+  wifiMulti.addAP(ssid, password);
 
   Serial.println("[ INFO ]\tConnecting to WiFi...");
   if (wifiMulti.run() == WL_CONNECTED) {
@@ -78,10 +84,6 @@ void SubmitWiFi(void)
   uint64_t chipid;  
 
   DynamicJsonBuffer jsonBuffer;
-
-  chipid = ESP.getEfuseMac(); //The chip ID is essentially its MAC address(length: 6 bytes).
-
-  String chipIdStr = String((uint32_t)(chipid>>16));
 
   JsonObject& root = jsonBuffer.createObject();
   root["username"] = chipIdStr;
@@ -144,7 +146,7 @@ void SubmitWiFi(void)
     unsigned long timeout = millis();
     while (client.available() == 0) {
       if (millis() - timeout > 5000) {
-        Serial.println(">>> Client Timeout !");
+        Serial.println("[ ERROR ]\tHTTP Client Timeout !");
         client.stop();
         return;
       }
