@@ -3,7 +3,7 @@
 #include <WiFi.h>
 #include <esp_wifi.h>
 
-const wifi_promiscuous_filter_t filt={ //Idk what this does
+const wifi_promiscuous_filter_t filt={
     .filter_mask=WIFI_PROMIS_FILTER_MASK_MGMT|WIFI_PROMIS_FILTER_MASK_DATA
 };
 
@@ -11,7 +11,7 @@ typedef struct { // or this
   uint8_t mac[6];
 } __attribute__((packed)) MacAddr;
 
-typedef struct { // still dont know much about this
+typedef struct {
   int16_t fctl;
   int16_t duration;
   MacAddr da;
