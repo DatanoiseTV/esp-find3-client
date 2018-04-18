@@ -27,7 +27,6 @@ WiFiMulti wifiMulti;
 #include <time.h>
 
 ESP8266WiFiMulti wifiMulti;
-#define CHIP_ID "182748263"
 #endif
 
 #define ARDUINOJSON_USE_LONG_LONG 1
@@ -122,7 +121,7 @@ void setup() {
   #ifdef ESP32
   chipIdStr = String((uint32_t)(ESP.getEfuseMac()>>16));
   #else
-  chipIdStr = String(CHIP_ID);
+  chipIdStr = String(ESP.getChipId());
   #endif
   
   Serial.print("[ INFO ]\tChipID is: ");
