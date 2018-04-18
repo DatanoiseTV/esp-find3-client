@@ -16,10 +16,19 @@
   along with esp-find3-client.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifdef ESP32
 #include <WiFiClientSecure.h>
 #include <WiFi.h>
 #include <WiFiMulti.h>
 WiFiMulti wifiMulti;
+#else
+#include <ESP8266WiFi.h>
+#include <ESP8266WiFiMulti.h>
+#include <time.h>
+
+ESP8266WiFiMulti wifiMulti;
+#define CHIP_ID "182748263"
+#endif
 
 #define ARDUINOJSON_USE_LONG_LONG 1
 #include <ArduinoJson.h>
@@ -28,21 +37,27 @@ const char* ssid     = "WIFI_SSID";
 const char* password = "WIFI_PASS";
 
 // Uncomment to set to learn mode
-//#define MODE_LEARNING 1
-#define LOCATION "living room"
+// #define MODE_LEARNING 1
+#define LOCATION "bath room"
 
 #define GROUP_NAME "somegroup"
 
 // Important! BLE + WiFi Support does not fit in standard partition table.
 // Manual experimental changes are needed.
 // See https://desire.giesecke.tk/index.php/2018/01/30/change-partition-size/
-#define USE_BLE 0
+//#define USE_BLE 1
 #define BLE_SCANTIME 5
 
 #ifdef USE_BLE
 #include <BLEDevice.h>
 #include <BLEUtils.h>
 #include <BLEScan.h>
+
+class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
+    void onResult(BLEAdvertisedDevice advertisedDevice) {
+      // Serial.printf("Advertised Device: %s \n", advertisedDevice.toString().c_str());
+    }
+};
 #endif
 
 // Automagically disable BLE on ESP8266
@@ -58,7 +73,9 @@ const char* password = "WIFI_PASS";
 // 20 currently results in an interval of 45s
 #define TIME_TO_SLEEP  20        /* Time ESP32 will go to sleep (in seconds) */
 
+#ifdef ESP32
 RTC_DATA_ATTR int bootCount = 0;
+#endif
 
 const char* host = "cloud.internalpositioning.com";
 const char* ntpServer = "pool.ntp.org";
@@ -72,6 +89,7 @@ Method to print the reason by which ESP32
 has been awaken from sleep
 */
 void print_wakeup_reason(){
+  #ifdef ESP32
   esp_sleep_wakeup_cause_t wakeup_reason;
 
   wakeup_reason = esp_sleep_get_wakeup_cause();
@@ -87,6 +105,7 @@ void print_wakeup_reason(){
     case 5  : Serial.println("[ INFO ]\tWakeup caused by ULP program"); break;
     default : Serial.println("[ INFO ]\tWakeup was not caused by deep sleep"); break;
   }
+  #endif
 }
 
 void setup() {
@@ -100,8 +119,12 @@ void setup() {
   #endif
 
   print_wakeup_reason();
-  
+  #ifdef ESP32
   chipIdStr = String((uint32_t)(ESP.getEfuseMac()>>16));
+  #else
+  chipIdStr = String(CHIP_ID);
+  #endif
+  
   Serial.print("[ INFO ]\tChipID is: ");
   Serial.println(chipIdStr);
 
@@ -117,6 +140,7 @@ void setup() {
 }
 
 unsigned long long getUnixTime() {
+  #ifdef ESP32
   time_t now;
   struct tm timeinfo;
   if (!getLocalTime(&timeinfo)) {
@@ -130,8 +154,10 @@ unsigned long long getUnixTime() {
   time(&now);
   unsigned long long uTime = (uintmax_t)now;
   return uTime * 1000UL;
+  #else
+  return 123456;
+  #endif
 }
-
 
 void SubmitWiFi(void)
 {
@@ -143,6 +169,7 @@ void SubmitWiFi(void)
   JsonObject& root = jsonBuffer.createObject();
   root["d"] = chipIdStr;
   root["f"] = GROUP_NAME;
+  root["t"] = getUnixTime();
   JsonObject& data = root.createNestedObject("s");
 
   Serial.println("[ INFO ]\tWiFi scan starting..");
@@ -163,6 +190,7 @@ void SubmitWiFi(void)
     Serial.println("[ INFO ]\tBLE scan starting..");
     BLEDevice::init("");
     BLEScan* pBLEScan = BLEDevice::getScan(); // create new scan
+    pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
     pBLEScan->setActiveScan(true); // active scan uses more power, but get results faster
     BLEScanResults foundDevices = pBLEScan->start(BLE_SCANTIME);
 
@@ -176,12 +204,13 @@ void SubmitWiFi(void)
       std::string mac = foundDevices.getDevice(i).getAddress().toString();
       bt_network[(String)mac.c_str()] = (int)foundDevices.getDevice(i).getRSSI();
     }
+    #else
+    Serial.println("[ INFO ]\tBLE scan skipped (BLE disabled)..");
     #endif // USE_BLE
 
     #ifdef MODE_LEARNING
       root["l"] = LOCATION;
     #endif
-    root["t"] = getUnixTime();
     
     root.printTo(request);
 
@@ -212,7 +241,7 @@ void SubmitWiFi(void)
 
     unsigned long timeout = millis();
     while (client.available() == 0) {
-      if (millis() - timeout > 5000) {
+      if (millis() - timeout > 2500) {
         Serial.println("[ ERROR ]\tHTTP Client Timeout !");
         client.stop();
         return;
@@ -254,4 +283,5 @@ void SubmitWiFi(void)
 
 void loop() {
   SubmitWiFi();
+  yield();
 }
