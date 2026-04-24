@@ -50,7 +50,9 @@ void sniffer(void* buf, wifi_promiscuous_pkt_type_t type) {
     wifi_pkt_rx_ctrl_t pkt = p->rx_ctrl;
     String packet, mac, mac_eui;
     for(int i=8;i<=p->rx_ctrl.sig_len;i++){
-     packet += String(p->payload[i],HEX);
+      String byte_str = String(p->payload[i],HEX);
+      if(byte_str.length() < 2) byte_str = "0" + byte_str;
+      packet += byte_str;
     }
     for(int i=4;i<=15;i++){
       mac += packet[i];
